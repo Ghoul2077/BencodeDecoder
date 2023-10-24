@@ -2,7 +2,7 @@
 
 bool getElementAtIndex(
     unordered_map<int, string>& stringOutput,
-    unordered_map<int, int>& integerOutput,
+    unordered_map<int, bigInt>& integerOutput,
     unordered_map<int, vector<string>>& listOutput,
     unordered_map<int, unordered_map<string, string>>& dictionaryOutput,
     const int& index, string& res) {
@@ -47,7 +47,7 @@ int getTokenType(const char& startingChar) {
 pair<bEncodeErrorTypes, int> bDecode(
     string input, int start, int stop, int& totalElementcount,
     unordered_map<int, string>& stringOutput,
-    unordered_map<int, int>& integerOutput,
+    unordered_map<int, bigInt>& integerOutput,
     unordered_map<int, vector<string>>& listOutput,
     unordered_map<int, unordered_map<string, string>>& dictionaryOutput,
     const int& steps) {
@@ -69,7 +69,7 @@ pair<bEncodeErrorTypes, int> bDecode(
                     tempInteger += input[i];
                 } while ((i < stop) && (input[i + 1] != 'e'));
 
-                int res;
+                bigInt res;
                 if (stringToInt(tempInteger, res)) {
                     integerOutput[totalElementcount++] = res;
                     i++;
@@ -89,7 +89,7 @@ pair<bEncodeErrorTypes, int> bDecode(
                     i++;
                 }
 
-                int stringSize;
+                bigInt stringSize;
                 if (stringToInt(_stringSize, stringSize)) {
                     i++;
                     string res = "";
@@ -113,7 +113,7 @@ pair<bEncodeErrorTypes, int> bDecode(
                 i++;
                 int listElementCount = 0;
                 unordered_map<int, string> _listStringOutput;
-                unordered_map<int, int> _listIntegerOutput;
+                unordered_map<int, bigInt> _listIntegerOutput;
                 unordered_map<int, vector<string>> _listOutput;
                 unordered_map<int, unordered_map<string, string>>
                     _dictionaryOutput;
@@ -159,7 +159,7 @@ pair<bEncodeErrorTypes, int> bDecode(
                 int dictionaryElementCount = 0;
                 pair<bEncodeErrorTypes, int> ret;
                 unordered_map<int, string> _dictionaryStringOutput;
-                unordered_map<int, int> _dictionaryIntegerOutput;
+                unordered_map<int, bigInt> _dictionaryIntegerOutput;
                 unordered_map<int, vector<string>> _listOutput;
                 unordered_map<int, unordered_map<string, string>>
                     _dictionaryOutput;
@@ -207,7 +207,8 @@ pair<bEncodeErrorTypes, int> bDecode(
                     if (getElementAtIndex(_dictionaryStringOutput,
                                           _dictionaryIntegerOutput, _listOutput,
                                           _dictionaryOutput, 0, elem2)) {
-                        dictionaryOutput[totalElementcount][elem1] = elem2;
+                        dictionaryOutput[totalElementcount][elem1] =
+                            (elem1 == "pieces") ? stringToHex(elem2) : elem2;
                     } else {
                         return {B_DICTIONARY_ERROR, ret.second};
                     }
@@ -237,10 +238,16 @@ pair<bEncodeErrorTypes, int> bDecode(
 }
 
 int main(int argc, char const* argv[]) {
-    string input = "li33e4:crac9:20023458eei3e4:moond1:ai1e1:bi2ee";
+    string input = "";
+    ifstream inputFile("input.torrent", ifstream::in | ifstream::binary);
+    for (string line; getline(inputFile, line);) {
+        input += line;
+    }
+    inputFile.close();
+
     int totalElements = 0;
     unordered_map<int, string> stringOutput;
-    unordered_map<int, int> integerOutput;
+    unordered_map<int, bigInt> integerOutput;
     unordered_map<int, vector<string>> listOutput;
     unordered_map<int, unordered_map<string, string>> dictionaryOutput;
 
@@ -248,29 +255,30 @@ int main(int argc, char const* argv[]) {
         bDecode(input, 0, input.size(), totalElements, stringOutput,
                 integerOutput, listOutput, dictionaryOutput);
 
-    if (ret.first == B_SUCCESS) {
-        cout << "Count of total elements : " << totalElements << endl;
-        for (int i = 0; i < totalElements; i++) {
-            if (stringOutput.count(i) > 0) {
-                cout << stringOutput[i];
-            } else if (integerOutput.count(i) > 0) {
-                cout << integerOutput[i];
-            } else if (listOutput.count(i) > 0) {
-                string lst;
-                if (arrayToString(listOutput[i], lst)) {
-                    cout << lst;
-                }
-            } else if (dictionaryOutput.count(i) > 0) {
-                string dict;
-                if (unorderedMapToString(dictionaryOutput[i], dict)) {
-                    cout << dict;
-                }
+    cout << "Count of total elements : " << totalElements << endl;
+    for (int i = 0; i < totalElements; i++) {
+        if (stringOutput.count(i) > 0) {
+            cout << stringOutput[i];
+        } else if (integerOutput.count(i) > 0) {
+            cout << integerOutput[i];
+        } else if (listOutput.count(i) > 0) {
+            string lst;
+            if (arrayToString(listOutput[i], lst)) {
+                cout << lst;
             }
-            if (i != (totalElements - 1)) {
-                cout << ", ";
+        } else if (dictionaryOutput.count(i) > 0) {
+            string dict;
+            if (unorderedMapToString(dictionaryOutput[i], dict)) {
+                cout << dict;
             }
         }
-    } else {
+        if (i != (totalElements - 1)) {
+            cout << ", ";
+        }
+    }
+
+    if (ret.first != B_SUCCESS) {
+        cout << ret.first << endl;
         cout << "Error occured at index : " << ret.second << endl;
     }
 

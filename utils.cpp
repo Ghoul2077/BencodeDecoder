@@ -8,7 +8,7 @@ bool isInteger(char ch) {
     return false;
 }
 
-bool stringToInt(string num, int& out) {
+bool stringToInt(string num, bigInt& out) {
     if (num.size() == 0) {
         return false;
     }
@@ -28,7 +28,7 @@ bool stringToInt(string num, int& out) {
     return true;
 }
 
-bool intToString(int num, string& out) {
+bool intToString(bigInt num, string& out) {
     while (num > 0) {
         int digit = num % 10;
         out = (char)(digit + ZERO_ASCII_VAL) + out;
@@ -55,8 +55,24 @@ bool unorderedMapToString(const unordered_map<string, string> input,
     out = "{ ";
     for (auto i : input) {
         counter++;
-        out += (i.first + " : " + i.second + ((counter != (size)) ? ", " : ""));
+        out += ('"' + i.first + '"' + " : " + '"' + i.second + '"' +
+                ((counter != (size)) ? ", " : ""));
     }
     out += " }";
     return true;
+}
+
+string stringToHex(const string& input) {
+    string res = "";
+    int n = input.size();
+    for (int i = 0; i < n; i++) {
+        ostringstream tmp;
+        tmp << hex << setfill('0') << setw(2)
+            << static_cast<unsigned int>(static_cast<unsigned char>(input[i]));
+        res += tmp.str();
+        if (i != (n - 1)) {
+            res += " ";
+        }
+    }
+    return res;
 }
