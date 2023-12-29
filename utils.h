@@ -1,6 +1,9 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#define deb(x) cout << #x << " = " << x << endl;
+#define deb2(x, y) cout << #x << " = " << x << ", " << #y << " = " << y << endl;
+
 #define THIS_BLOCK __FUNCTION__
 #define ZERO_ASCII_VAL 48
 #define NINE_ASCII_VAL 57

@@ -53,12 +53,16 @@ bool unorderedMapToString(const unordered_map<string, string> input,
     int counter = 0;
 
     out = "{ ";
+    out += "\n";
     for (auto i : input) {
         counter++;
+        out += "\t";
+        i.second = regex_replace(i.second, regex("\n"), "\n\t");
         out += ('"' + i.first + '"' + " : " + '"' + i.second + '"' +
                 ((counter != (size)) ? ", " : ""));
+        out += "\n";
     }
-    out += " }";
+    out += "}";
     return true;
 }
 
