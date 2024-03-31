@@ -7,7 +7,8 @@ using namespace std;
 #define THIS_BLOCK __FUNCTION__
 #define ZERO_ASCII_VAL 48
 #define NINE_ASCII_VAL 57
-#define bigInt unsigned long long int
+#define bigInt long long int
+#define bigUInt unsigned long long int
 
 bool isInteger(const char ch);
 bool stringToInt(const string num, bigInt& out);

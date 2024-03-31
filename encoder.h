@@ -3,29 +3,90 @@
 #include "utils.h"
 using namespace std;
 
-enum bEncodeErrorTypes {
+#define B_TOKEN_END 'e'
+
+enum bEncodeReturnTypes {
     B_SUCCESS = 1,
-    UNIDENTIFIED_ERROR = -1,
+    B_UNIDENTIFIED_ERROR = -1,
     B_INTEGER_ERROR = -2,
-    B_STRING_ERROR = -3,
-    B_LIST_ERROR = -4,
-    B_DICTIONARY_ERROR = -5,
-    B_INPUT_ARGS_ERROR = -6
+    B_STRING_SIZE_ERROR = -3,
+    B_STRING_ERROR = -4,
+    B_LIST_ERROR = -5,
+    B_DICTIONARY_ERROR = -6,
+    B_INPUT_ARGS_ERROR = -7,
+    B_DELIMITERS_NOT_PROPER = -8
 };
 
 enum bEncodeDataTypes { B_INTEGER, B_STRING, B_LIST, B_DICTIONARY, B_NONE };
 
-pair<bEncodeErrorTypes, int> bDecode(
-    string input, int start, int stop, int& totalElementcount,
-    unordered_map<int, string>& stringOutput,
-    unordered_map<int, bigInt>& integerOutput,
-    unordered_map<int, vector<string>>& listOutput,
-    unordered_map<int, unordered_map<string, string>>& dictionaryOutput,
-    const int& steps = -1);
+class Bdecode {
+   private:
+    int tokenCount;
+    unordered_map<bigInt, string> stringItems;
+    unordered_map<bigInt, bigInt> integerItems;
+    unordered_map<bigInt, vector<string>> listItems;
+    unordered_map<bigInt, unordered_map<string, string>> dictionaryItems;
+    unordered_map<bigInt, bigInt>* delimiterPairLocation;
 
-bool getElementAtIndex(
-    unordered_map<int, string>& stringOutput,
-    unordered_map<int, bigInt>& integerOutput,
-    unordered_map<int, vector<string>>& listOutput,
-    unordered_map<int, unordered_map<string, string>>& dictionaryOutput,
-    const int& index, string& res);
+    bigInt parseInt(const string& input, const int& start, bigInt& out,
+                    bEncodeReturnTypes& ret);
+    bigInt parseStringSize(const string& input, const int& start, bigInt& size,
+                           bEncodeReturnTypes& ret);
+    bigInt parseString(const string& input, const int& start,
+                       const bigInt& stringSize, string& out,
+                       bEncodeReturnTypes& ret);
+    unordered_map<bigInt, bigInt>* parseDelimiters(const string& input,
+                                                   const bigInt& start,
+                                                   const bigInt& end,
+                                                   bEncodeReturnTypes& res);
+    bigInt decode(const string& input, const int& start, const int& end,
+                  bEncodeReturnTypes& res);
+
+   public:
+    Bdecode(const string& input) {
+        tokenCount = 0;
+        bEncodeReturnTypes res = B_SUCCESS;
+        bigInt inputSize = input.size();
+
+        delimiterPairLocation = parseDelimiters(input, 0, inputSize, res);
+        if (res != B_SUCCESS) {
+            throw B_DELIMITERS_NOT_PROPER;
+        }
+        decode(input, 0, inputSize, res);
+        if (res != B_SUCCESS) {
+            throw res;
+        }
+    }
+
+    Bdecode(const string& input, const bigInt& start, const bigInt& stop) {
+        tokenCount = 0;
+        bEncodeReturnTypes res = B_SUCCESS;
+
+        delimiterPairLocation = parseDelimiters(input, start, stop, res);
+        if (res != B_SUCCESS) {
+            throw B_DELIMITERS_NOT_PROPER;
+        }
+        decode(input, start, stop, res);
+        if (res != B_SUCCESS) {
+            throw res;
+        }
+    }
+
+    Bdecode(const string& input, const bigInt& start, const bigInt& stop,
+            unordered_map<bigInt, bigInt>* const _delimiterLocation) {
+        delimiterPairLocation = _delimiterLocation;
+        tokenCount = 0;
+
+        bEncodeReturnTypes res = B_SUCCESS;
+        decode(input, start, stop, res);
+        if (res != B_SUCCESS) {
+            throw res;
+        }
+    }
+
+    ~Bdecode() { delete delimiterPairLocation; }
+
+    void print();
+    bool getElementAtIndex(const int& index, void* res,
+                           bEncodeDataTypes& returnType);
+};

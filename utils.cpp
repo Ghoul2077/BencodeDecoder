@@ -9,30 +9,57 @@ bool isInteger(char ch) {
 }
 
 bool stringToInt(string num, bigInt& out) {
-    if (num.size() == 0) {
+    bigInt len = num.size();
+    if (len == 0) {
         return false;
     }
-    int len = num.size();
-    for (int i = 0; i < len; i++) {
+
+    bool isNegative = false;
+    if (num[0] == '-') {
+        isNegative = true;
+    }
+
+    for (int i = (isNegative ? 1 : 0); i < len; i++) {
         if (!isInteger(num[i])) {
             return false;
         }
     }
     out = 0;
-    for (int i = 0; i < len; i++) {
+    for (int i = (isNegative ? 1 : 0); i < len; i++) {
         int asciiVal = (int)num[i];
         int res = asciiVal - ZERO_ASCII_VAL;
+        // to handle integer overflow
+        if (out * 10 < out) {
+            return false;
+        }
         out *= 10;
+        // to handle integer overflow
+        if (out + res < out) {
+            return false;
+        }
         out += res;
     }
+
+    if (isNegative) {
+        out *= -1;
+    }
+
     return true;
 }
 
 bool intToString(bigInt num, string& out) {
+    bool isNegative = false;
+    if (num < 0) {
+        isNegative = true;
+        num *= -1;
+    }
     while (num > 0) {
         int digit = num % 10;
         out = (char)(digit + ZERO_ASCII_VAL) + out;
         num /= 10;
+    }
+    if (isNegative) {
+        out += "-";
     }
     return true;
 }
