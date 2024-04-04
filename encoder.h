@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 
+#include "bEncodeToken.h"
 #include "utils.h"
 using namespace std;
 
@@ -17,16 +18,11 @@ enum bEncodeReturnTypes {
     B_DELIMITERS_NOT_PROPER = -8
 };
 
-enum bEncodeDataTypes { B_INTEGER, B_STRING, B_LIST, B_DICTIONARY, B_NONE };
-
 class Bdecode {
    private:
     int tokenCount;
-    unordered_map<bigInt, string> stringItems;
-    unordered_map<bigInt, bigInt> integerItems;
-    unordered_map<bigInt, vector<string>> listItems;
-    unordered_map<bigInt, unordered_map<string, string>> dictionaryItems;
-    unordered_map<bigInt, bigInt>* delimiterPairLocation;
+    unordered_map<bigInt, BEncodeToken> decodedData;
+    unordered_map<bigInt, bigInt> delimiterPairLocation;
 
     bigInt parseInt(const string& input, const int& start, bigInt& out,
                     bEncodeReturnTypes& ret);
@@ -35,10 +31,10 @@ class Bdecode {
     bigInt parseString(const string& input, const int& start,
                        const bigInt& stringSize, string& out,
                        bEncodeReturnTypes& ret);
-    unordered_map<bigInt, bigInt>* parseDelimiters(const string& input,
-                                                   const bigInt& start,
-                                                   const bigInt& end,
-                                                   bEncodeReturnTypes& res);
+    unordered_map<bigInt, bigInt> parseDelimiters(const string& input,
+                                                  const bigInt& start,
+                                                  const bigInt& end,
+                                                  bEncodeReturnTypes& res);
     bigInt decode(const string& input, const int& start, const int& end,
                   bEncodeReturnTypes& res);
 
@@ -73,7 +69,7 @@ class Bdecode {
     }
 
     Bdecode(const string& input, const bigInt& start, const bigInt& stop,
-            unordered_map<bigInt, bigInt>* const _delimiterLocation) {
+            unordered_map<bigInt, bigInt> const& _delimiterLocation) {
         delimiterPairLocation = _delimiterLocation;
         tokenCount = 0;
 
@@ -84,9 +80,9 @@ class Bdecode {
         }
     }
 
-    ~Bdecode() { delete delimiterPairLocation; }
-
     void print();
+    vector<BEncodeToken> getVectorizedFormat();
+    unordered_map<string, BEncodeToken> getDictionaryFormat();
     bool getElementAtIndex(const int& index, void* res,
                            bEncodeDataTypes& returnType);
 };

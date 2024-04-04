@@ -39,34 +39,19 @@ void printError(bEncodeReturnTypes& ret) {
 }
 
 void Bdecode::print() {
-    cout << __LINE__ << " : total token count = " << tokenCount << endl;
-    string res = "";
+    cout << __FUNCTION__ << "() : " << __LINE__
+         << " : total token count = " << tokenCount << endl;
 
+    cout << endl << "==============================================" << endl;
     for (bigInt i = 1; i <= tokenCount; i++) {
-        if (stringItems.count(i) > 0) {
-            res += stringItems[i];
-        } else if (integerItems.count(i) > 0) {
-            string out;
-            if (intToString(integerItems[i], out)) {
-                res += out;
-            }
-        } else if (listItems.count(i) > 0) {
-            string lst;
-            if (arrayToString(listItems[i], lst)) {
-                res += lst;
-            }
-        } else if (dictionaryItems.count(i) > 0) {
-            string dict;
-            if (unorderedMapToString(dictionaryItems[i], dict)) {
-                res += dict;
-            }
-        }
+        decodedData[i].print();
         if (i != (tokenCount)) {
-            res += ", ";
+            cout << ", ";
         }
     }
-
-    cout << res << endl;
+    cout << endl
+         << "==============================================" << endl
+         << endl;
 }
 
 /* Take bencoded string as input & parses the first integer from start point
@@ -154,11 +139,26 @@ bigInt Bdecode::parseString(const string& input, const int& start,
     return end;
 }
 
-unordered_map<bigInt, bigInt>* Bdecode::parseDelimiters(
+vector<BEncodeToken> Bdecode::getVectorizedFormat() {
+    vector<BEncodeToken> res;
+    for (auto i : decodedData) {
+        res.push_back(i.second);
+    }
+    return res;
+}
+
+unordered_map<string, BEncodeToken> Bdecode::getDictionaryFormat() {
+    unordered_map<string, BEncodeToken> res;
+    for (int i = 1; i <= tokenCount; i += 2) {
+        res.insert({decodedData[i].toString(), decodedData[i + 1]});
+    }
+    return res;
+}
+
+unordered_map<bigInt, bigInt> Bdecode::parseDelimiters(
     const string& input, const bigInt& start, const bigInt& end,
     bEncodeReturnTypes& res) {
-    unordered_map<bigInt, bigInt>* delimiters =
-        new unordered_map<bigInt, bigInt>();
+    unordered_map<bigInt, bigInt> delimiters;
     res = B_SUCCESS;
 
     stack<bigInt> st;
@@ -168,9 +168,9 @@ unordered_map<bigInt, bigInt>* Bdecode::parseDelimiters(
             if (st.size()) {
                 bigInt delimiterStart = st.top();
                 st.pop();
-                delimiters->insert({delimiterStart, i});
+                delimiters.insert({delimiterStart, i});
             } else {
-                cout << __LINE__ << " : "
+                cout << __FUNCTION__ << "() : " << __LINE__ << " : "
                      << "Delimiter not proper, index " << i << endl;
                 res = B_DELIMITERS_NOT_PROPER;
                 break;
@@ -191,9 +191,9 @@ unordered_map<bigInt, bigInt>* Bdecode::parseDelimiters(
                     i++;
                 }
                 if ((i < end) && (input[i] == B_TOKEN_END)) {
-                    delimiters->insert({tokenStart, i});
+                    delimiters.insert({tokenStart, i});
                 } else {
-                    cout << __LINE__ << " : "
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
                          << "Delimiter not proper, index " << i << endl;
                     res = B_DELIMITERS_NOT_PROPER;
                 }
@@ -209,9 +209,9 @@ unordered_map<bigInt, bigInt>* Bdecode::parseDelimiters(
                         res = B_DELIMITERS_NOT_PROPER;
                         break;
                     }
-                    delimiters->insert({tokenStart, i});
+                    delimiters.insert({tokenStart, i});
                 } else {
-                    cout << __LINE__ << " : "
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
                          << "string parsing error while parsing delimiters, "
                             "index "
                          << i << endl;
@@ -229,61 +229,35 @@ unordered_map<bigInt, bigInt>* Bdecode::parseDelimiters(
     }
 
     if (st.size() > 0) {
-        cout << __LINE__ << " : "
+        cout << __FUNCTION__ << "() : " << __LINE__ << " : "
              << "Pair not present for all starting delimiters, count = "
              << st.size() << endl;
         res = B_DELIMITERS_NOT_PROPER;
     }
 
-    cout << __LINE__ << " : "
+#ifdef DEBUG
+    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
          << "Delimiter array : ";
-    if (delimiters->size() > 0) {
+    if (delimiters.size() > 0) {
         cout << "[";
         int instance = 0;
-        for (auto i : *delimiters) {
+        for (auto i : delimiters) {
             cout << "[" << i.first << ", " << i.second << "]";
             instance++;
-            if (instance != delimiters->size()) {
+            if (instance != delimiters.size()) {
                 cout << ", ";
             }
         }
         cout << "]" << endl;
     }
+#endif
 
     return delimiters;
 }
 
-bool Bdecode::getElementAtIndex(const int& index, void* res,
-                                bEncodeDataTypes& returnType) {
-    if (index > tokenCount) {
-        res = NULL;
-        return false;
-    }
-
-    if (stringItems.count(index) > 0) {
-        res = &stringItems[index];
-        returnType = B_STRING;
-        return true;
-    } else if (integerItems.count(index) > 0) {
-        res = &integerItems[index];
-        returnType = B_INTEGER;
-        return true;
-    } else if (listItems.count(index) > 0) {
-        res = &listItems[index];
-        returnType = B_LIST;
-        return true;
-    } else if (dictionaryItems.count(index) > 0) {
-        res = &dictionaryItems[index];
-        returnType = B_DICTIONARY;
-        return true;
-    }
-
-    return false;
-}
-
 bigInt Bdecode::decode(const string& input, const int& start, const int& end,
                        bEncodeReturnTypes& res) {
-    int inputSize = end - start + 1;
+    int inputSize = end - start;
 
     if (inputSize == 0) {
         res = B_SUCCESS;
@@ -298,9 +272,15 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
                 bigInt out;
                 i = parseInt(input, i + 1, out, res);
                 if (res == B_SUCCESS) {
-                    cout << __LINE__ << " : "
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
                          << "Integer parsing success, " << out << endl;
-                    integerItems[++tokenCount] = out;
+                    BEncodeToken token;
+                    token.type = B_INTEGER;
+                    token.num = out;
+                    decodedData[++tokenCount] = token;
+                } else {
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                         << "Integer parsing failure, res : " << res << endl;
                 }
                 break;
             }
@@ -311,44 +291,102 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
                     string out;
                     i = parseString(input, stringStart, stringSize, out, res);
                     if (res == B_SUCCESS) {
-                        cout << __LINE__ << " : "
+                        cout << __FUNCTION__ << "() : " << __LINE__ << " : "
                              << "String parsing success, " << out << endl;
-                        stringItems[++tokenCount] = out;
+                        BEncodeToken token;
+                        token.type = B_STRING;
+                        token.str = out;
+                        decodedData[++tokenCount] = token;
                     }
                 }
                 break;
             }
             case B_LIST: {
-                if (delimiterPairLocation->count(i + 1) == 0) {
-                    cout << __LINE__ << " : "
-                         << "no ending delimiter found for list, index : " << i
-                         << endl;
+                if (delimiterPairLocation.count(i) == 0) {
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                         << "no ending delimiter found for list, index : "
+                         << i + 1 << endl;
                     return B_LIST_ERROR;
                 }
-                Bdecode subListDecoded(input, i + 1,
-                                       delimiterPairLocation->at(i + 1),
-                                       delimiterPairLocation);
-                void* res;
-                // listItems[++tokenCount] =
-                // subListDecoded->getElementAtIndex(1);
+#ifdef DEBUG
+                cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                     << "Decoding list from, index : " << i << " to "
+                     << delimiterPairLocation[i] << endl;
+#endif
+
+                try {
+                    Bdecode subListDecoded(input, i + 1,
+                                           delimiterPairLocation[i],
+                                           delimiterPairLocation);
+                    BEncodeToken token;
+                    token.type = B_LIST;
+                    token.list = subListDecoded.getVectorizedFormat();
+                    decodedData[++tokenCount] = token;
+#ifdef DEBUG
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                         << "List parsing success, index : " << i << " to "
+                         << delimiterPairLocation[i] << endl;
+                    subListDecoded.print();
+#endif
+                    i = delimiterPairLocation[i] + 1;
+                } catch (bEncodeReturnTypes& err) {
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                         << "Error while parsing list, index : " << i << endl;
+                    res = err;
+                }
                 break;
             }
             case B_DICTIONARY: {
-                // i = decode(input, i + 1, end, res);
+                if (delimiterPairLocation.count(i) == 0) {
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                         << "no ending delimiter found for dictionary, index : "
+                         << i << endl;
+                    return B_DICTIONARY_ERROR;
+                }
+#ifdef DEBUG
+                cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                     << "Decoding dictionary from, index : " << i << " to "
+                     << delimiterPairLocation[i] << endl;
+#endif
+
+                try {
+                    Bdecode subDictDecoded(input, i + 1,
+                                           delimiterPairLocation[i],
+                                           delimiterPairLocation);
+                    BEncodeToken token;
+                    token.type = B_DICTIONARY;
+                    token.dict = subDictDecoded.getDictionaryFormat();
+                    decodedData[++tokenCount] = token;
+#ifdef DEBUG
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                         << "Dictionary parsing success, index : " << i
+                         << " to " << delimiterPairLocation[i] << endl;
+                    subDictDecoded.print();
+#endif
+                    i = delimiterPairLocation[i] + 1;
+                } catch (bEncodeReturnTypes& err) {
+                    cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                         << "Error while parsing dictionary, index : " << i
+                         << endl;
+                    res = err;
+                }
                 break;
             }
             default: {
-                cout << __LINE__ << " : "
-                     << "Returning unidentified error, index : " << i << endl;
-                cout << __LINE__ << " : ";
+#ifdef DEBUG
+                cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                     << "Returning unidentified error, index : " << i
+                     << ", value : " << input[i] << endl;
+                cout << __FUNCTION__ << "() : " << __LINE__ << " : ";
                 print();
+#endif
                 res = B_UNIDENTIFIED_ERROR;
                 return i;
             }
         }
 
         if (res != B_SUCCESS) {
-            cout << __LINE__ << " : "
+            cout << __FUNCTION__ << "() : " << __LINE__ << " : "
                  << "Parsing error, index : " << i << endl;
             break;
         }
@@ -369,16 +407,16 @@ int main(int argc, char const* argv[]) {
     // }
     // inputFile.close();
 
-    string input = "d7:prakhari800el3:sinee";
+    string input = "d7:prakhari800el3:sine2:qre";
     // string input =
     //     "dl8:announce18:http://tracker.comi-1090e3:abce2:pri22el1:aee";
 
     try {
         Bdecode decodedInstance(input);
-        cout << __LINE__ << " : ";
+        cout << __FUNCTION__ << "() : " << __LINE__ << " : ";
         decodedInstance.print();
     } catch (bEncodeReturnTypes err) {
-        cout << __LINE__ << " : ";
+        cout << __FUNCTION__ << "() : " << __LINE__ << " : ";
         printError(err);
     }
 
