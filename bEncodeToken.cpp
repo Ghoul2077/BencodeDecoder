@@ -1,156 +1,100 @@
 #include "bEncodeToken.h"
 
-BEncodeToken::BEncodeToken(const BEncodeToken& _) : type(_.type) {
-    switch (_.type) {
-        case B_INTEGER:
-            num = _.num;
-            break;
-        case B_STRING:
-            str = _.str;
-            break;
-        case B_LIST:
-            list = _.list;
-            break;
-        case B_DICTIONARY:
-            dict = _.dict;
-            break;
-        default:
-            break;
-    }
+BEncodeToken::BEncodeToken() : val() {}
+
+BEncodeToken::BEncodeToken(const bigInt _) : val(_) {}
+
+BEncodeToken::BEncodeToken(const string _) : val(_) {}
+
+BEncodeToken::BEncodeToken(const vector<BEncodeToken> _) : val(_) {}
+
+BEncodeToken::BEncodeToken(const unordered_map<string, BEncodeToken> _) {
+    val = _;
 }
 
-BEncodeToken& BEncodeToken::operator=(BEncodeToken const& _data) {
-    type = _data.type;
-    switch (_data.type) {
-        case B_INTEGER:
-            num = _data.num;
-            break;
-        case B_STRING:
-            str = _data.str;
-            break;
-        case B_LIST: {
-            list = _data.list;
-            break;
-        }
-        case B_DICTIONARY: {
-            dict = _data.dict;
-            break;
-        }
-        default:
-            break;
-    }
+BEncodeToken::BEncodeToken(const BEncodeToken& _) { val = _.val; }
+
+BEncodeToken& BEncodeToken::operator=(BEncodeToken const& _) {
+    val = _.val;
     return *this;
 }
 
-bool BEncodeToken::operator==(const BEncodeToken& _data) const {
-    if (type == _data.type) {
-        if (type == B_NONE) {
-            return true;
-        }
-        switch (type) {
-            case B_STRING:
-                return (str == _data.str);
-                break;
-            case B_INTEGER:
-                return (num == _data.num);
-                break;
-            case B_LIST:
-                return (list == _data.list);
-                break;
-            case B_DICTIONARY:
-                return (dict == _data.dict);
-                break;
-            default:
-                break;
-        }
-    }
-    return false;
+bool BEncodeToken::operator==(const BEncodeToken& _) const {
+    return (val == _.val);
 }
 
 void BEncodeToken::print() const {
-    switch (type) {
-        case B_INTEGER:
-            cout << num;
-            break;
-        case B_STRING:
-            cout << str;
-            break;
-        case B_LIST: {
-            int instances = 0;
-            cout << "[";
-            for (auto i : list) {
-                i.print();
-                instances++;
-                if (instances != list.size()) {
-                    cout << ", ";
-                }
+    if (holds_alternative<bigInt>(val)) {
+        cout << get<bigInt>(val);
+    } else if (holds_alternative<string>(val)) {
+        cout << get<string>(val);
+    } else if (holds_alternative<vector<BEncodeToken>>(val)) {
+        int instances = 0;
+        cout << "[";
+        vector<BEncodeToken> const* list = &get<vector<BEncodeToken>>(val);
+        for (auto i : *list) {
+            i.print();
+            instances++;
+            if (instances != list->size()) {
+                cout << ", ";
             }
-            cout << "]";
-            break;
         }
-        case B_DICTIONARY: {
-            int instances = 0;
-            cout << "{";
-            for (auto i : dict) {
-                cout << i.first;
-                cout << " : ";
-                i.second.print();
-                instances++;
-                if (instances != dict.size()) {
-                    cout << ", ";
-                }
+        cout << "]";
+    } else if (holds_alternative<unordered_map<string, BEncodeToken>>(val)) {
+        int instances = 0;
+        cout << "{";
+        unordered_map<string, BEncodeToken> const* dict =
+            &get<unordered_map<string, BEncodeToken>>(val);
+        for (auto i : *dict) {
+            cout << i.first;
+            cout << " : ";
+            i.second.print();
+            instances++;
+            if (instances != dict->size()) {
+                cout << ", ";
             }
-            cout << "}";
-            break;
         }
-        default:
-            break;
+        cout << "}";
     }
 }
 
 string BEncodeToken::toString() const {
     string res = "";
 
-    switch (type) {
-        case B_INTEGER: {
-            if (!intToString(num, res)) {
-                cout << __FUNCTION__ << "() : " << __LINE__ << " : "
-                     << "Cannot convert the integer token to string" << endl;
-                res = "";
-            }
-            break;
+    if (holds_alternative<bigInt>(val)) {
+        bigInt const* num = &get<bigInt>(val);
+        if (!intToString(*num, res)) {
+            cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                 << "Cannot convert the integer token to string" << endl;
+            res = "";
         }
-        case B_STRING: {
-            res = "\"" + str + "\"";
-            break;
+    } else if (holds_alternative<string>(val)) {
+        string const* str = &get<string>(val);
+        res = "\"" + (*str) + "\"";
+    } else if (holds_alternative<vector<BEncodeToken>>(val)) {
+        vector<BEncodeToken> const* list = &get<vector<BEncodeToken>>(val);
+        vector<string> out;
+        for (auto i : *list) {
+            out.push_back(i.toString());
         }
-        case B_LIST: {
-            vector<string> out;
-            for (auto i : list) {
-                out.push_back(i.toString());
-            }
-            if (!arrayToString(out, res)) {
-                cout << __FUNCTION__ << "() : " << __LINE__ << " : "
-                     << "Cannot convert the list to string" << endl;
-                res = "";
-            }
-            break;
+        if (!arrayToString(out, res)) {
+            cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                 << "Cannot convert the list to string" << endl;
+            res = "";
         }
-        case B_DICTIONARY: {
-            unordered_map<string, string> out;
-            for (auto i : dict) {
-                if (out.count(i.first) == 0) {
-                    out[i.first] = i.second.toString();
-                }
+    } else if (holds_alternative<unordered_map<string, BEncodeToken>>(val)) {
+        unordered_map<string, BEncodeToken> const* dict =
+            &get<unordered_map<string, BEncodeToken>>(val);
+        unordered_map<string, string> out;
+        for (auto i : *dict) {
+            if (out.count(i.first) == 0) {
+                out[i.first] = i.second.toString();
             }
-            if (!unorderedMapToString(out, res)) {
-                cout << __FUNCTION__ << "() : " << __LINE__ << " : "
-                     << "Cannot convert dictionary to string" << endl;
-            }
-            break;
         }
-        default:
-            break;
+        if (!unorderedMapToString(out, res)) {
+            cout << __FUNCTION__ << "() : " << __LINE__ << " : "
+                 << "Cannot convert dictionary to string" << endl;
+        }
     }
 
     return res;

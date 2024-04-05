@@ -8,16 +8,17 @@ using namespace std;
 enum bEncodeDataTypes { B_INTEGER, B_STRING, B_LIST, B_DICTIONARY, B_NONE };
 
 struct BEncodeToken {
-    bEncodeDataTypes type;
+    // TODO : Check custom implmentation of vairant
+    // https://gist.github.com/tibordp/6909880
+    variant<bigInt, string, vector<BEncodeToken>,
+            unordered_map<string, BEncodeToken>>
+        val;
 
-    // TODO: check if vairant data type can be implmented here
-    bigInt num;
-    string str;
-    vector<BEncodeToken> list;
-    // TODO: Add supporting map data structure for lexicographic ordering
-    unordered_map<string, BEncodeToken> dict;
-
-    BEncodeToken() { type = B_NONE; }
+    BEncodeToken();
+    BEncodeToken(const bigInt _);
+    BEncodeToken(const string _);
+    BEncodeToken(const vector<BEncodeToken> _);
+    BEncodeToken(const unordered_map<string, BEncodeToken> _);
     BEncodeToken(const BEncodeToken& _);
     BEncodeToken& operator=(BEncodeToken const& _data);
     bool operator==(BEncodeToken const& _data) const;

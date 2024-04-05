@@ -2,8 +2,11 @@
 using namespace std;
 
 #define DEBUG
+// #undef DEBUG
+
 #define deb(x) cout << #x << " = " << x << endl;
 #define deb2(x, y) cout << #x << " = " << x << ", " << #y << " = " << y << endl;
+#define DBG_LOG(x) cout << __FUNCTION__ << "() : " << __LINE__ << " : " << x
 
 #define THIS_BLOCK __FUNCTION__
 #define ZERO_ASCII_VAL 48
