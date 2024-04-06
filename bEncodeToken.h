@@ -22,6 +22,7 @@ struct BEncodeToken {
     BEncodeToken(const BEncodeToken& _);
     BEncodeToken& operator=(BEncodeToken const& _data);
     bool operator==(BEncodeToken const& _data) const;
+    bEncodeDataTypes getDatatype() const;
     string toString() const;
     void print() const;
 };

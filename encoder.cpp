@@ -39,7 +39,7 @@ void printError(bEncodeReturnTypes& ret) {
 }
 
 void Bdecode::print() {
-    DBG_LOG(" : total token count = " << tokenCount << endl);
+    DBG_LOG(" : total token count = " << tokenCount);
 
     cout << endl << "==============================================" << endl;
     for (bigInt i = 1; i <= tokenCount; i++) {
@@ -55,13 +55,13 @@ void Bdecode::print() {
 
 /* Take bencoded string as input & parses the first integer from start point
     passed, it prints the parsed value in std output of terminal */
-bigInt Bdecode::parseInt(const string& input, const int& start, bigInt& out,
+bigInt Bdecode::parseInt(const string& input, const bigInt& start, bigInt& out,
                          bEncodeReturnTypes& ret) {
-    int inputSize = input.size();
-    int end = inputSize;
+    bigInt inputSize = input.size();
+    bigInt end = inputSize;
 
     string intValInStr = "";
-    int iterator = start;
+    bigInt iterator = start;
     do {
         intValInStr += input[iterator++];
     } while ((iterator < inputSize) && (input[iterator] != 'e'));
@@ -81,17 +81,17 @@ bigInt Bdecode::parseInt(const string& input, const int& start, bigInt& out,
 
 /* Take bencoded string as input & parses the first integer from start point
     passed, it prints the parsed value in std output of terminal */
-bigInt Bdecode::parseStringSize(const string& input, const int& start,
+bigInt Bdecode::parseStringSize(const string& input, const bigInt& start,
                                 bigInt& size, bEncodeReturnTypes& ret) {
-    int inputSize = input.size();
-    int end = inputSize;
+    bigInt inputSize = input.size();
+    bigInt end = inputSize;
 
     if (start > inputSize) {
         ret = B_STRING_SIZE_ERROR;
         return end;
     }
 
-    int iter = start;
+    bigInt iter = start;
     string _stringSize = "";
 
     while ((iter < inputSize) && (input[iter] != ':')) {
@@ -114,12 +114,12 @@ bigInt Bdecode::parseStringSize(const string& input, const int& start,
     return end;
 }
 
-bigInt Bdecode::parseString(const string& input, const int& start,
+bigInt Bdecode::parseString(const string& input, const bigInt& start,
                             const bigInt& stringSize, string& out,
                             bEncodeReturnTypes& ret) {
     ret = B_SUCCESS;
-    int inputSize = input.size();
-    int end = inputSize;
+    bigInt inputSize = input.size();
+    bigInt end = inputSize;
 
     if ((start + stringSize) > inputSize) {
         ret = B_STRING_ERROR;
@@ -127,7 +127,7 @@ bigInt Bdecode::parseString(const string& input, const int& start,
     }
 
     string res = "";
-    int iter = start;
+    bigInt iter = start;
     while ((iter < (start + stringSize)) && (iter < inputSize)) {
         res += input[iter];
         iter++;
@@ -148,7 +148,7 @@ vector<BEncodeToken> Bdecode::getVectorizedFormat() {
 
 unordered_map<string, BEncodeToken> Bdecode::getDictionaryFormat() {
     unordered_map<string, BEncodeToken> res;
-    for (int i = 1; i <= tokenCount; i += 2) {
+    for (bigInt i = 1; i <= tokenCount; i += 2) {
         res.insert({decodedData[i].toString(), decodedData[i + 1]});
     }
     return res;
@@ -169,7 +169,7 @@ unordered_map<bigInt, bigInt> Bdecode::parseDelimiters(
                 st.pop();
                 delimiters.insert({delimiterStart, i});
             } else {
-                DBG_LOG("Delimiter not proper, index " << i << endl);
+                DBG_LOG("Delimiter not proper, index " << i);
                 res = B_DELIMITERS_NOT_PROPER;
                 break;
             }
@@ -191,7 +191,7 @@ unordered_map<bigInt, bigInt> Bdecode::parseDelimiters(
                 if ((i < end) && (input[i] == B_TOKEN_END)) {
                     delimiters.insert({tokenStart, i});
                 } else {
-                    DBG_LOG("Delimiter not proper, index " << i << endl);
+                    DBG_LOG("Delimiter not proper, index " << i);
                     res = B_DELIMITERS_NOT_PROPER;
                 }
                 break;
@@ -209,9 +209,8 @@ unordered_map<bigInt, bigInt> Bdecode::parseDelimiters(
                     delimiters.insert({tokenStart, i});
                 } else {
                     DBG_LOG(
-                        "string parsing error while parsing delimiters, "
-                        "index "
-                        << i << endl);
+                        "string parsing error while parsing delimiters, index "
+                        << i);
                     res = B_DELIMITERS_NOT_PROPER;
                 }
                 break;
@@ -227,7 +226,13 @@ unordered_map<bigInt, bigInt> Bdecode::parseDelimiters(
 
     if (st.size() > 0) {
         DBG_LOG("Pair not present for all starting delimiters, count = "
-                << st.size() << endl);
+                << st.size());
+        cout << "Indices with mismatch : ";
+        while (st.size()) {
+            cout << st.top() << " ";
+            st.pop();
+        }
+        cout << endl;
         res = B_DELIMITERS_NOT_PROPER;
     }
 
@@ -235,7 +240,7 @@ unordered_map<bigInt, bigInt> Bdecode::parseDelimiters(
     DBG_LOG("Delimiter array : ");
     if (delimiters.size() > 0) {
         cout << "[";
-        int instance = 0;
+        bigInt instance = 0;
         for (auto i : delimiters) {
             cout << "[" << i.first << ", " << i.second << "]";
             instance++;
@@ -250,9 +255,9 @@ unordered_map<bigInt, bigInt> Bdecode::parseDelimiters(
     return delimiters;
 }
 
-bigInt Bdecode::decode(const string& input, const int& start, const int& end,
-                       bEncodeReturnTypes& res) {
-    int inputSize = end - start;
+bigInt Bdecode::decode(const string& input, const bigInt& start,
+                       const bigInt& end, bEncodeReturnTypes& res) {
+    bigInt inputSize = end - start;
 
     if (inputSize == 0) {
         res = B_SUCCESS;
@@ -267,11 +272,11 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
                 bigInt out;
                 i = parseInt(input, i + 1, out, res);
                 if (res == B_SUCCESS) {
-                    DBG_LOG("Integer parsing success, " << out << endl);
+                    DBG_LOG("Integer parsing success, " << out);
                     BEncodeToken token(out);
                     decodedData[++tokenCount] = token;
                 } else {
-                    DBG_LOG("Integer parsing failure, res : " << res << endl);
+                    DBG_LOG("Integer parsing failure, res : " << res);
                 }
                 break;
             }
@@ -282,7 +287,7 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
                     string out;
                     i = parseString(input, stringStart, stringSize, out, res);
                     if (res == B_SUCCESS) {
-                        DBG_LOG("String parsing success, " << out << endl);
+                        DBG_LOG("String parsing success, " << out);
                         BEncodeToken token(out);
                         decodedData[++tokenCount] = token;
                     }
@@ -292,13 +297,13 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
             case B_LIST: {
                 if (delimiterPairLocation.count(i) == 0) {
                     DBG_LOG("no ending delimiter found for list, index : "
-                            << i + 1 << endl);
+                            << i + 1);
                     return B_LIST_ERROR;
                 }
 #ifdef DEBUG
 
                 DBG_LOG("Decoding list from, index : "
-                        << i << " to " << delimiterPairLocation[i] << endl);
+                        << i << " to " << delimiterPairLocation[i]);
 #endif
 
                 try {
@@ -309,12 +314,12 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
                     decodedData[++tokenCount] = token;
 #ifdef DEBUG
                     DBG_LOG("List parsing success, index : "
-                            << i << " to " << delimiterPairLocation[i] << endl);
+                            << i << " to " << delimiterPairLocation[i]);
                     subListDecoded.print();
 #endif
                     i = delimiterPairLocation[i] + 1;
                 } catch (bEncodeReturnTypes& err) {
-                    DBG_LOG("Error while parsing list, index : " << i << endl);
+                    DBG_LOG("Error while parsing list, index : " << i);
                     res = err;
                 }
                 break;
@@ -322,12 +327,12 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
             case B_DICTIONARY: {
                 if (delimiterPairLocation.count(i) == 0) {
                     DBG_LOG("no ending delimiter found for dictionary, index : "
-                            << i << endl);
+                            << i);
                     return B_DICTIONARY_ERROR;
                 }
 #ifdef DEBUG
                 DBG_LOG("Decoding dictionary from, index : "
-                        << i << " to " << delimiterPairLocation[i] << endl);
+                        << i << " to " << delimiterPairLocation[i]);
 #endif
 
                 try {
@@ -338,14 +343,13 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
                     decodedData[++tokenCount] = token;
 #ifdef DEBUG
                     DBG_LOG("Dictionary parsing success, index : "
-                            << i << " to " << delimiterPairLocation[i] << endl);
+                            << i << " to " << delimiterPairLocation[i]);
                     DBG_LOG(endl);
                     subDictDecoded.print();
 #endif
                     i = delimiterPairLocation[i] + 1;
                 } catch (bEncodeReturnTypes& err) {
-                    DBG_LOG("Error while parsing dictionary, index : " << i
-                                                                       << endl);
+                    DBG_LOG("Error while parsing dictionary, index : " << i);
                     res = err;
                 }
                 break;
@@ -353,8 +357,8 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
             default: {
 #ifdef DEBUG
                 DBG_LOG("Returning unidentified error, index : "
-                        << i << ", value : " << input[i] << endl);
-                DBG_LOG(endl);
+                        << i << ", value : " << input[i]);
+                DBG_LOG("");
                 print();
 #endif
                 res = B_UNIDENTIFIED_ERROR;
@@ -373,27 +377,20 @@ bigInt Bdecode::decode(const string& input, const int& start, const int& end,
 }
 
 int main(int argc, char const* argv[]) {
-    // string input =
-    //     "d8:announce18:http://tracker.com10:created by14:KTorrent "
-    //     "2.1.413:creation "
-    //     "datei1182163277e4:infod6:lengthi6e4:name8:file.txt12:piece "
-    //     "lengthi32768e6:pieces12:binary dataee";
-    // ifstream inputFile("input3.torrent", ifstream::in |
-    // ifstream::binary); for (string line; getline(inputFile, line);) {
-    //     input += line;
-    // }
-    // inputFile.close();
-
-    string input = "d7:prakhari800el3:sinee";
-    // string input =
-    //     "dl8:announce18:http://tracker.comi-1090e3:abce2:pri22el1:aee";
+    string input = "";
+    ifstream inputFile("input4.torrent", ifstream::in | ifstream::binary);
+    vector<unsigned char> buffer(istreambuf_iterator<char>(inputFile), {});
+    for (auto i : buffer) {
+        input += i;
+    }
+    inputFile.close();
 
     try {
         Bdecode decodedInstance(input);
-        DBG_LOG(endl);
+        DBG_LOG("");
         decodedInstance.print();
     } catch (bEncodeReturnTypes err) {
-        DBG_LOG(endl);
+        DBG_LOG("");
         printError(err);
     }
 

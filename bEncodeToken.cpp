@@ -27,7 +27,15 @@ void BEncodeToken::print() const {
     if (holds_alternative<bigInt>(val)) {
         cout << get<bigInt>(val);
     } else if (holds_alternative<string>(val)) {
-        cout << get<string>(val);
+        string const* str = &get<string>(val);
+        bool isAsciiString = isAsciiEncoded(*str);
+        if (isAsciiString) {
+            cout << *str;
+        } else {
+            cout << "<hex> ";
+            printStringAsHex(*str, " ");
+            cout << "<hex>";
+        }
     } else if (holds_alternative<vector<BEncodeToken>>(val)) {
         int instances = 0;
         cout << "[";
@@ -98,4 +106,18 @@ string BEncodeToken::toString() const {
     }
 
     return res;
+}
+
+bEncodeDataTypes BEncodeToken::getDatatype() const {
+    if (holds_alternative<bigInt>(val)) {
+        return B_INTEGER;
+    } else if (holds_alternative<string>(val)) {
+        return B_STRING;
+    } else if (holds_alternative<vector<BEncodeToken>>(val)) {
+        return B_LIST;
+    } else if (holds_alternative<unordered_map<string, BEncodeToken>>(val)) {
+        return B_DICTIONARY;
+    } else {
+        return B_NONE;
+    }
 }

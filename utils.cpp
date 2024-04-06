@@ -1,6 +1,6 @@
 #include "utils.h"
 
-bool isInteger(char ch) {
+bool isInteger(const char& ch) {
     int asciiVal = (int)ch;
     if ((asciiVal >= ZERO_ASCII_VAL) && (asciiVal <= NINE_ASCII_VAL)) {
         return true;
@@ -8,7 +8,7 @@ bool isInteger(char ch) {
     return false;
 }
 
-bool stringToInt(string num, bigInt& out) {
+bool stringToInt(const string& num, bigInt& out) {
     bigInt len = num.size();
     if (len == 0) {
         return false;
@@ -64,7 +64,7 @@ bool intToString(bigInt num, string& out) {
     return true;
 }
 
-bool arrayToString(const vector<string> input, string& out) {
+bool arrayToString(const vector<string>& input, string& out) {
     int size = input.size();
     out = "[ ";
     for (int i = 0; i < size; i++) {
@@ -74,7 +74,7 @@ bool arrayToString(const vector<string> input, string& out) {
     return true;
 }
 
-bool unorderedMapToString(const unordered_map<string, string> input,
+bool unorderedMapToString(const unordered_map<string, string>& input,
                           string& out) {
     int size = input.size();
     int counter = 0;
@@ -106,4 +106,23 @@ string stringToHex(const string& input) {
         }
     }
     return res;
+}
+
+bool isAsciiEncoded(const string& str) {
+    for (int i = 0; i < str.size(); i++) {
+        int asciiVal = (unsigned char)str[i];
+        if (asciiVal < ASCII_START || asciiVal > ASCII_END) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void printStringAsHex(const string& str, const string& delimiter) {
+    cout.setf(std::ios_base::hex, std::ios::basefield);
+    for (int i = 0; i < str.size(); i++) {
+        unsigned char ch = str[i];
+        cout << int(ch) << delimiter;
+    }
+    cout.unsetf(std::ios_base::hex | std::ios::basefield);
 }

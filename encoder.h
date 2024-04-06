@@ -1,7 +1,6 @@
 #include <bits/stdc++.h>
 
 #include "bEncodeToken.h"
-#include "utils.h"
 using namespace std;
 
 #define B_TOKEN_END 'e'
@@ -20,22 +19,22 @@ enum bEncodeReturnTypes {
 
 class Bdecode {
    private:
-    int tokenCount;
+    bigInt tokenCount;
     unordered_map<bigInt, BEncodeToken> decodedData;
     unordered_map<bigInt, bigInt> delimiterPairLocation;
 
-    bigInt parseInt(const string& input, const int& start, bigInt& out,
+    bigInt parseInt(const string& input, const bigInt& start, bigInt& out,
                     bEncodeReturnTypes& ret);
-    bigInt parseStringSize(const string& input, const int& start, bigInt& size,
-                           bEncodeReturnTypes& ret);
-    bigInt parseString(const string& input, const int& start,
+    bigInt parseStringSize(const string& input, const bigInt& start,
+                           bigInt& size, bEncodeReturnTypes& ret);
+    bigInt parseString(const string& input, const bigInt& start,
                        const bigInt& stringSize, string& out,
                        bEncodeReturnTypes& ret);
     unordered_map<bigInt, bigInt> parseDelimiters(const string& input,
                                                   const bigInt& start,
                                                   const bigInt& end,
                                                   bEncodeReturnTypes& res);
-    bigInt decode(const string& input, const int& start, const int& end,
+    bigInt decode(const string& input, const bigInt& start, const bigInt& end,
                   bEncodeReturnTypes& res);
 
    public:
