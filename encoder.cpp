@@ -53,6 +53,17 @@ void Bdecode::print() {
          << endl;
 }
 
+bEncodeReturnTypes Bdecode::getElementAtIndex(const int& index,
+                                              BEncodeToken& token) {
+    if ((index <= 0) || (index > tokenCount)) {
+        DBG_LOG("Invalid index provided");
+        return B_INPUT_ARGS_ERROR;
+    }
+
+    token = decodedData[index];
+    return B_SUCCESS;
+}
+
 /* Take bencoded string as input & parses the first integer from start point
     passed, it prints the parsed value in std output of terminal */
 bigInt Bdecode::parseInt(const string& input, const bigInt& start, bigInt& out,
