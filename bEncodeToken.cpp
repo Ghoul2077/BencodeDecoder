@@ -28,14 +28,7 @@ void BEncodeToken::print() const {
         cout << get<bigInt>(val);
     } else if (holds_alternative<string>(val)) {
         string const* str = &get<string>(val);
-        bool isAsciiString = isAsciiEncoded(*str);
-        if (isAsciiString) {
-            cout << *str;
-        } else {
-            cout << "<hex> ";
-            printStringAsHex(*str, " ");
-            cout << "<hex>";
-        }
+        cout << *str;
     } else if (holds_alternative<vector<BEncodeToken>>(val)) {
         int instances = 0;
         cout << "[";

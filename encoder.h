@@ -84,4 +84,5 @@ class Bdecode {
     unordered_map<string, BEncodeToken> getDictionaryFormat();
     bool getElementAtIndex(const int& index, void* res,
                            bEncodeDataTypes& returnType);
+    bigInt size() { return tokenCount; }
 };
