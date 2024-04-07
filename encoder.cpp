@@ -379,9 +379,9 @@ bigInt Bdecode::decode(const string& input, const bigInt& start,
 int main(int argc, char const* argv[]) {
     string input = "";
     ifstream inputFile("input4.torrent", ifstream::in | ifstream::binary);
-    vector<unsigned char> buffer(istreambuf_iterator<char>(inputFile), {});
-    for (auto i : buffer) {
-        input += i;
+    char ch;
+    while (inputFile.get(ch)) {
+        input += ch;
     }
     inputFile.close();
 
